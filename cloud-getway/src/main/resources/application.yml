@@ -1,0 +1,53 @@
+server:
+  port: 9002
+  
+spring:
+   application:
+      name: CLOUD-GATEWAY   
+   
+   cloud:
+      gateway:
+        routes:
+         - id: CUSTOMER-SERVICE
+           uri: http://localhost:8001
+           predicates:
+              - Path=/customer/**
+           filters:
+           - name: CircuitBreaker
+             args:
+                name: CUSTOMER-SERVICE 
+                fallbackuri: forward:/customerServiceFallBackMethod     
+
+         - id: RECEIVER-SERVICE
+           uri: http://localhost:8002
+           predicates:
+              - Path=/receiver/** 
+           filters:
+           - name: CircuitBreaker
+             args:
+                name: RECEIVER-SERVICE 
+                fallbackuri: forward:/receiverServiceFallBackMethod     
+hystrix:
+  command:
+    fallbackcmd:
+       excution:
+          isolation:
+              thread:
+                 timeoutInMilliseconds: 4000
+       
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream            
+eureka:
+   instance:
+     hostname: localhost
+   client:
+      serviceUrl:
+         defaultZone: http://localhost:9001/eureka
+      fetch-registry: true
+      register-with-eureka: true
+
+  
+      
